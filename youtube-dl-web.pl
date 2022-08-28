@@ -89,12 +89,12 @@ __DATA__
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>YouTube Downloader</title>
+  <title>Video Downloader</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-gH2yIJqKdNHPEq0n4Mqa/HGKIhSkIHeL5AyhkYV8i59U5AR6csBvApHHNl/vI1Bx" crossorigin="anonymous">
 </head>
 <body>
   <div class="container">
-    <h2>YouTube Downloader</h2>
+    <h2 class="mb-3">Video Downloader</h2>
     <form method="post">
       <div class="row mb-3 align-items-center">
         <label for="youtube-video-url" class="visually-hidden">Video URL</label>
@@ -106,8 +106,11 @@ __DATA__
         <div class="col-auto"><button type="submit" class="btn btn-primary">Download</button></div>
         <div class="col-auto"><span class="form-text">Please be patient and click download only once</span></div>
       </div>
+      <div class="row mb-3"><span class="form-text">
       <% if (defined stash('error_msg')) { %>
-        <div class="row mb-3"><span class="form-text">Error: <%= stash('error_msg') %></span></div>
+        Error: <%= stash('error_msg') %>
+      <% } else { %>
+        Currently supported sites: YouTube, Twitch
       <% } %>
     </form>
   </div>
