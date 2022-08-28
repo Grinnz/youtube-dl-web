@@ -97,8 +97,8 @@ __DATA__
     <h2>YouTube Downloader</h2>
     <form method="post">
       <div class="row mb-3 align-items-center">
-        <label for="youtube-video-url" class="visually-hidden">YouTube/Twitch video URL</label>
-        <div class="col-auto"><input type="text" class="form-control" id="youtube-video-url" name="url" placeholder="YouTube/Twitch video URL"></div>
+        <label for="youtube-video-url" class="visually-hidden">Video URL</label>
+        <div class="col-auto"><input type="text" class="form-control" id="youtube-video-url" name="url" placeholder="Video URL"></div>
         <div class="col-auto formcheck">
           <input type="checkbox" class="form-check-input" id="youtube-video-audio-only" name="audio-only" value="1">
           <label for="youtube-video-audio-only" class="form-check-label">Audio Only</label>
