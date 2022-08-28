@@ -17,3 +17,5 @@ nytprof.out
 *.bs
 /_eumm/
 /youtube-dl-web-*
+/youtube-dl-web.sqlite*
+/youtube-dl-web.conf
