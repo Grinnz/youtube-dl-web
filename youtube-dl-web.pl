@@ -39,6 +39,8 @@ app->minion->add_task(download_video => sub ($job, $url, $options = {}) {
   $job->finish({tempfile => $tempfile, basename => $basename});
 });
 
+my %allowed_hosts = map { ($_ => 1) } qw(youtube.com www.youtube.com youtu.be twitch.tv www.twitch.tv clips.twitch.tv);
+
 get '/' => 'form';
 post '/' => sub ($c) {
   $c->inactivity_timeout(1800);
@@ -48,7 +50,7 @@ post '/' => sub ($c) {
   $url = Mojo::URL->new($url);
 
   my $host = lc($url->host) // '';
-  return $c->render('form', error_msg => 'Invalid YouTube URL') unless $host eq 'youtube.com' or $host eq 'www.youtube.com' or $host eq 'youtu.be';
+  return $c->render('form', error_msg => 'Invalid YouTube/Twitch URL') unless exists $allowed_hosts{lc($url->host // '')};
   if ($url->path =~ m!^/shorts/([^/\s]+)!) {
     my $id = $1;
     $url->host('www.youtube.com');
@@ -63,7 +65,7 @@ post '/' => sub ($c) {
   return $c->minion->result_p($job_id)->then(sub ($info) {
     my $result = $info->{result};
     unless (defined $result and defined $result->{tempfile}) {
-      return $c->render('form', error_msg => 'Failed to download YouTube video');
+      return $c->render('form', error_msg => 'Failed to download video');
     }
     my $tempfile = $result->{tempfile};
     my $basename = $result->{basename} // path($tempfile)->basename;
@@ -74,7 +76,7 @@ post '/' => sub ($c) {
     $c->reply->asset(Mojo::Asset::File->new(path => $tempfile)->cleanup(1));
   })->catch(sub ($info) {
     $c->log->error("Job $job_id failed: $info->{result}");
-    $c->render('form', error_msg => 'Failed to download YouTube video');
+    $c->render('form', error_msg => 'Failed to download video');
   });
 } => 'download';
 
@@ -95,8 +97,8 @@ __DATA__
     <h2>YouTube Downloader</h2>
     <form method="post">
       <div class="row mb-3 align-items-center">
-        <label for="youtube-video-url" class="visually-hidden">YouTube video URL</label>
-        <div class="col-auto"><input type="text" class="form-control" id="youtube-video-url" name="url" placeholder="YouTube video URL"></div>
+        <label for="youtube-video-url" class="visually-hidden">YouTube/Twitch video URL</label>
+        <div class="col-auto"><input type="text" class="form-control" id="youtube-video-url" name="url" placeholder="YouTube/Twitch video URL"></div>
         <div class="col-auto formcheck">
           <input type="checkbox" class="form-check-input" id="youtube-video-audio-only" name="audio-only" value="1">
           <label for="youtube-video-audio-only" class="form-check-label">Audio Only</label>
