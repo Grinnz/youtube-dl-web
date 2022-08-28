@@ -49,11 +49,11 @@ post '/' => sub ($c) {
   return $c->render('form', error_msg => 'No URL provided') unless length $url;
   $url = Mojo::URL->new($url);
 
-  my $host = lc($url->host) // '';
-  return $c->render('form', error_msg => 'Invalid YouTube/Twitch URL') unless exists $allowed_hosts{lc($url->host // '')};
-  if ($url->path =~ m!^/shorts/([^/\s]+)!) {
+  $url->scheme('https') unless length $url->scheme;
+  return $c->render('form', error_msg => 'Invalid YouTube/Twitch URL') unless exists $allowed_hosts{lc($url->host // '')}
+    and ($url->scheme eq 'http' or $url->scheme eq 'https');
+  if (lc($url->host // '') =~ m!\byoutube.com\z!i and $url->path =~ m!^/shorts/([^/\s]+)!) {
     my $id = $1;
-    $url->host('www.youtube.com');
     $url->path('/watch');
     $url->query({v => $id});
   }
