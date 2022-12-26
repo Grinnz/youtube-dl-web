@@ -25,7 +25,8 @@ app->minion->add_task(download_video => sub ($job, $url, $options = {}) {
   my $tempdir = tempdir;
   my $template = "$tempdir/%(title)s-%(id)s.%(ext)s";
   my @args = ('-o', $template, '--quiet', '--restrict-filenames');
-  push @args, '--extract-audio' if $options->{audio_only};
+  push @args, '--format', $options->{video_format} // 'best' unless $options->{audio_only};
+  push @args, '--extract-audio', '--audio-format', $options->{audio_format} // 'best' if $options->{audio_only};
   run3 ['youtube-dl', @args, $url], undef, \my $stdout, \my $stderr;
   if ($?) {
     my $exitcode = $? >> 8;
@@ -59,7 +60,9 @@ post '/' => sub ($c) {
   }
 
   my %options;
+  $options{video_format} = $c->req->param('video-format');
   $options{audio_only} = $c->req->param('audio-only');
+  $options{audio_format} = $c->req->param('audio-format');
 
   my $job_id = $c->minion->enqueue(download_video => [$url->to_string, \%options]);
   return $c->minion->result_p($job_id)->then(sub ($info) {
@@ -76,7 +79,7 @@ post '/' => sub ($c) {
     $c->reply->asset(Mojo::Asset::File->new(path => $tempfile)->cleanup(1));
   })->catch(sub ($info) {
     $c->log->error("Job $job_id failed: $info->{result}");
-    $c->render('form', error_msg => 'Failed to download video');
+    $c->render('form', error_msg => 'Failed to download video', video_url => $url->to_string);
   });
 } => 'download';
 
@@ -98,11 +101,28 @@ __DATA__
     <form method="post">
       <div class="row mb-3 align-items-center">
         <label for="youtube-video-url" class="visually-hidden">Video URL</label>
-        <div class="col-auto"><input type="text" class="form-control" id="youtube-video-url" name="url" placeholder="Video URL"></div>
+        <div class="col-auto"><input type="text" class="form-control" id="youtube-video-url" name="url" <% if (defined stash('video_url')) { %>value="<%= stash('video_url') %>" <% } %>placeholder="Video URL"></div>
+        <div class="col-auto"><select class="form-select" name="video-format" aria-label="Video format">
+          <option value="best" selected>Best available video format</option>
+          <option value="3gp">3gp</option>
+          <option value="flv">flv</option>
+          <option value="mp4">mp4</option>
+          <option value="webm">webm</option>
+        </select></div>
         <div class="col-auto formcheck">
           <input type="checkbox" class="form-check-input" id="youtube-video-audio-only" name="audio-only" value="1">
           <label for="youtube-video-audio-only" class="form-check-label">Audio Only</label>
         </div>
+        <div class="col-auto"><select class="form-select" name="audio-format" aria-label="Audio format">
+          <option value="best" selected>Best available audio-only format</option>
+          <option value="aac">aac</option>
+          <option value="flac">flac</option>
+          <option value="mp3">mp3</option>
+          <option value="m4a">m4a</option>
+          <option value="opus">opus</option>
+          <option value="vorbis">vorbis</option>
+          <option value="wav">wav</option>
+        </select></div>
         <div class="col-auto"><button type="submit" class="btn btn-primary">Download</button></div>
         <div class="col-auto"><span class="form-text">Please be patient and click download only once</span></div>
       </div>
