@@ -27,7 +27,14 @@ app->minion->add_task(download_video => sub ($job, $url, $options = {}) {
   my $tempdir = tempdir(DIR => $tmp);
   my $template = "$tempdir/%(title)s-%(id)s.%(ext)s";
   my @args = ('-o', $template, '--quiet', '--restrict-filenames');
-  push @args, '--format', $options->{video_format} // 'best' unless $options->{audio_only};
+  unless ($options->{audio_only}) {
+    my $videofilter = '';
+    $videofilter .= "[height<=$options->{video_maxres}]" if ($options->{video_maxres} // 'best') ne 'best';
+    $videofilter .= "[fps<=$options->{video_maxfps}]" if ($options->{video_maxfps} // 'best') ne 'best';
+    my $format = $options->{video_format} // 'best';
+    $format = $format eq 'best' ? "bestvideo$videofilter+bestaudio/best$videofilter" : "$format$videofilter";
+    push @args, '--format', $format;
+  }
   push @args, '--extract-audio', '--audio-format', $options->{audio_format} // 'best' if $options->{audio_only};
   run3 ['youtube-dl', @args, $url], undef, \my $stdout, \my $stderr;
   if ($?) {
@@ -64,6 +71,8 @@ post '/' => sub ($c) {
 
   my %options;
   $options{video_format} = $c->req->param('video-format');
+  $options{video_maxres} = $c->req->param('video-maxres');
+  $options{video_maxfps} = $c->req->param('video-maxfps');
   $options{audio_only} = $c->req->param('audio-only');
   $options{audio_format} = $c->req->param('audio-format');
 
@@ -114,6 +123,21 @@ __DATA__
         </select></div>
       </div>
       <div class="row mb-3">
+        <div class="col-sm-6"><select class="form-select" name="video-maxres" aria-label="Max video resolution">
+          <option value="best" selected>Best available video resolution</option>
+          <option value="1080">1080p</option>
+          <option value="720">720p</option>
+          <option value="480">480p</option>
+          <option value="360">360p</option>
+          <option value="160">160p</option>
+        </select></div>
+        <div class="col-sm-6"><select class="form-select" name="video-maxfps" aria-label="Max video framerate">
+          <option value="best" selected>Best available video framerate</option>
+          <option value="60">60fps</option>
+          <option value="30">30fps</option>
+        </select></div>
+      </div>
+      <div class="row mb-3">
         <div class="col-sm-6">
           <div class="form-check">
             <input type="checkbox" class="form-check-input" id="youtube-video-audio-only" name="audio-only" value="1">
@@ -135,11 +159,11 @@ __DATA__
         <div class="col-sm-1"><button type="submit" class="btn btn-primary">Download</button></div>
         <div class="col-sm-11"><span class="form-text">Please be patient and click download only once</span></div>
       </div>
-      <div class="row mb-3"><span class="form-text">
+      <div class="row mb-3">
       <% if (defined stash('error_msg')) { %>
-        Error: <%= stash('error_msg') %>
+        <span class="form-text text-danger">Error: <%= stash('error_msg') %></span>
       <% } else { %>
-        Currently supported sites: YouTube, Twitch, TikTok
+        <span class="form-text">Currently supported sites: YouTube, Twitch, TikTok</span>
       <% } %>
     </form>
   </div>
