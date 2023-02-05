@@ -46,7 +46,8 @@ my %allowed_hosts = map { ($_ => 1) } qw(youtube.com www.youtube.com youtu.be tw
 
 get '/' => 'form';
 post '/' => sub ($c) {
-  $c->inactivity_timeout(1800);
+  my $timeout = $c->app->config->{inactivity_timeout} // 600;
+  $c->inactivity_timeout($timeout);
 
   my $url = $c->req->param('url');
   return $c->render('form', error_msg => 'No URL provided') unless length $url;
@@ -101,21 +102,25 @@ __DATA__
   <div class="container">
     <h2 class="mb-3">Video Downloader</h2>
     <form method="post">
-      <div class="row mb-3 align-items-center">
+      <div class="row mb-3">
         <label for="youtube-video-url" class="visually-hidden">Video URL</label>
-        <div class="col-auto"><input type="text" class="form-control" id="youtube-video-url" name="url" <% if (defined stash('video_url')) { %>value="<%= stash('video_url') %>" <% } %>placeholder="Video URL"></div>
-        <div class="col-auto"><select class="form-select" name="video-format" aria-label="Video format">
+        <div class="col-sm-6"><input type="text" class="form-control" id="youtube-video-url" name="url" <% if (defined stash('video_url')) { %>value="<%= stash('video_url') %>" <% } %>placeholder="Video URL"></div>
+        <div class="col-sm-6"><select class="form-select" name="video-format" aria-label="Video format">
           <option value="best" selected>Best available video format</option>
           <option value="3gp">3gp</option>
           <option value="flv">flv</option>
           <option value="mp4">mp4</option>
           <option value="webm">webm</option>
         </select></div>
-        <div class="col-auto formcheck">
-          <input type="checkbox" class="form-check-input" id="youtube-video-audio-only" name="audio-only" value="1">
-          <label for="youtube-video-audio-only" class="form-check-label">Audio Only</label>
+      </div>
+      <div class="row mb-3">
+        <div class="col-sm-6">
+          <div class="form-check">
+            <input type="checkbox" class="form-check-input" id="youtube-video-audio-only" name="audio-only" value="1">
+            <label for="youtube-video-audio-only" class="form-check-label">Audio Only</label>
+          </div>
         </div>
-        <div class="col-auto"><select class="form-select" name="audio-format" aria-label="Audio format">
+        <div class="col-sm-6"><select class="form-select" name="audio-format" aria-label="Audio format">
           <option value="best" selected>Best available audio-only format</option>
           <option value="aac">aac</option>
           <option value="flac">flac</option>
@@ -125,8 +130,10 @@ __DATA__
           <option value="vorbis">vorbis</option>
           <option value="wav">wav</option>
         </select></div>
-        <div class="col-auto"><button type="submit" class="btn btn-primary">Download</button></div>
-        <div class="col-auto"><span class="form-text">Please be patient and click download only once</span></div>
+      </div>
+      <div class="row mb-3 align-items-center">
+        <div class="col-sm-1"><button type="submit" class="btn btn-primary">Download</button></div>
+        <div class="col-sm-11"><span class="form-text">Please be patient and click download only once</span></div>
       </div>
       <div class="row mb-3"><span class="form-text">
       <% if (defined stash('error_msg')) { %>
