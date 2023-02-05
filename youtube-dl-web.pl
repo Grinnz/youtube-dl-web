@@ -7,6 +7,7 @@ use Mojo::File 'tempdir', 'curfile', 'path';
 use Mojo::SQLite;
 use Mojo::URL;
 
+use File::Spec;
 use File::Temp ();
 use IPC::Run3;
 use MIME::Types;
@@ -22,7 +23,8 @@ helper sqlite => sub { $sqlite //= Mojo::SQLite->new->from_filename(curfile->sib
 plugin Minion => {SQLite => app->sqlite};
 
 app->minion->add_task(download_video => sub ($job, $url, $options = {}) {
-  my $tempdir = tempdir;
+  my $tmp = $job->app->config->{tmpdir} // File::Spec->tmpdir;
+  my $tempdir = tempdir(DIR => $tmp);
   my $template = "$tempdir/%(title)s-%(id)s.%(ext)s";
   my @args = ('-o', $template, '--quiet', '--restrict-filenames');
   push @args, '--format', $options->{video_format} // 'best' unless $options->{audio_only};
@@ -35,7 +37,7 @@ app->minion->add_task(download_video => sub ($job, $url, $options = {}) {
   my $filepath = $tempdir->list->first;
   die "No video downloaded by youtube-dl $url\n" unless defined $filepath;
   my $basename = $filepath->basename;
-  my $tempfile = File::Temp->new(UNLINK => 0);
+  my $tempfile = File::Temp->new(DIR => $tmp, UNLINK => 0);
   $filepath->move_to($tempfile);
   $job->finish({tempfile => $tempfile, basename => $basename});
 });
