@@ -18,6 +18,8 @@ plugin 'Config';
 app->secrets(app->config->{secrets}) if defined app->config->{secrets};
 app->log->with_roles('Mojo::Log::Role::Clearable')->path(app->config->{logfile}) if defined app->config->{logfile};
 
+my $exec_path = app->config->{exec_path} // 'yt-dlp';
+
 my $sqlite;
 helper sqlite => sub { $sqlite //= Mojo::SQLite->new->from_filename(curfile->sibling('youtube-dl-web.sqlite')) };
 plugin Minion => {SQLite => app->sqlite};
@@ -36,13 +38,13 @@ app->minion->add_task(download_video => sub ($job, $url, $options = {}) {
     push @args, '--format', $format;
   }
   push @args, '--extract-audio', '--audio-format', $options->{audio_format} // 'best' if $options->{audio_only};
-  run3 ['youtube-dl', @args, $url], undef, \my $stdout, \my $stderr;
+  run3 [$exec_path, @args, $url], undef, \my $stdout, \my $stderr;
   if ($?) {
     my $exitcode = $? >> 8;
-    die "youtube-dl $url failed with exit code $exitcode\nSTDOUT: $stdout\nSTDERR: $stderr\n";
+    die "$exec_path $url failed with exit code $exitcode\nSTDOUT: $stdout\nSTDERR: $stderr\n";
   }
   my $filepath = $tempdir->list->first;
-  die "No video downloaded by youtube-dl $url\n" unless defined $filepath;
+  die "No video downloaded by $exec_path $url\n" unless defined $filepath;
   my $basename = $filepath->basename;
   my $tempfile = File::Temp->new(DIR => $tmp, UNLINK => 0);
   $filepath->move_to($tempfile);
