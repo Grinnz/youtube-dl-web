@@ -51,7 +51,7 @@ app->minion->add_task(download_video => sub ($job, $url, $options = {}) {
   $job->finish({tempfile => $tempfile, basename => $basename});
 });
 
-my %allowed_hosts = map { ($_ => 1) } qw(youtube.com www.youtube.com youtu.be twitch.tv www.twitch.tv clips.twitch.tv tiktok.com www.tiktok.com);
+my %allowed_hosts = map { ($_ => 1) } qw(youtube.com www.youtube.com youtu.be twitch.tv www.twitch.tv clips.twitch.tv kick.com www.kick.com tiktok.com www.tiktok.com);
 
 get '/' => 'form';
 post '/' => sub ($c) {
@@ -165,7 +165,7 @@ __DATA__
       <% if (defined stash('error_msg')) { %>
         <span class="form-text text-danger">Error: <%= stash('error_msg') %></span>
       <% } else { %>
-        <span class="form-text">Currently supported sites: YouTube, Twitch, TikTok</span>
+        <span class="form-text">Currently supported sites: YouTube, Twitch, Kick, TikTok</span>
       <% } %>
     </form>
   </div>
