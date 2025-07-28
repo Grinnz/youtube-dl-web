@@ -82,7 +82,7 @@ post '/' => sub ($c) {
   return $c->minion->result_p($job_id)->then(sub ($info) {
     my $result = $info->{result};
     unless (defined $result and defined $result->{tempfile}) {
-      return $c->render('form', error_msg => 'Failed to download video');
+      return $c->render('form', error_msg => 'Failed to download video. It may not be publicly downloadable or you can try downloading it with different options.');
     }
     my $tempfile = $result->{tempfile};
     my $basename = $result->{basename} // path($tempfile)->basename;
@@ -93,7 +93,7 @@ post '/' => sub ($c) {
     $c->reply->asset(Mojo::Asset::File->new(path => $tempfile)->cleanup(1));
   })->catch(sub ($info) {
     $c->log->error("Job $job_id failed: $info->{result}");
-    $c->render('form', error_msg => 'Failed to download video', video_url => $url->to_string);
+    $c->render('form', error_msg => 'Failed to download video. It may not be publicly downloadable or you can try downloading it with different options.', video_url => $url->to_string);
   });
 } => 'download';
 
