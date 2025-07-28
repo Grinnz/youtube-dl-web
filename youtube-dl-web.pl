@@ -51,7 +51,7 @@ app->minion->add_task(download_video => sub ($job, $url, $options = {}) {
   $job->finish({tempfile => $tempfile, basename => $basename});
 });
 
-my %allowed_hosts = map { ($_ => 1) } qw(youtube.com www.youtube.com youtu.be twitch.tv www.twitch.tv clips.twitch.tv kick.com www.kick.com tiktok.com www.tiktok.com);
+my %allowed_hosts = map { ($_ => 1) } qw(youtube.com www.youtube.com youtu.be twitch.tv www.twitch.tv clips.twitch.tv kick.com www.kick.com tiktok.com www.tiktok.com instagram.com www.instagram.com);
 
 get '/' => 'form';
 post '/' => sub ($c) {
@@ -107,7 +107,8 @@ __DATA__
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Video Downloader</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-gH2yIJqKdNHPEq0n4Mqa/HGKIhSkIHeL5AyhkYV8i59U5AR6csBvApHHNl/vI1Bx" crossorigin="anonymous">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-LN+7fdVzj6u52u30Kp6M/trliBMCMKTyK833zpbD+pXdCLuTusPj697FH4R/5mcr" crossorigin="anonymous">
+  <script>document.documentElement.setAttribute('data-bs-theme', (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'))</script>
 </head>
 <body>
   <div class="container">
@@ -165,7 +166,7 @@ __DATA__
       <% if (defined stash('error_msg')) { %>
         <span class="form-text text-danger">Error: <%= stash('error_msg') %></span>
       <% } else { %>
-        <span class="form-text">Currently supported sites: YouTube, Twitch, Kick, TikTok</span>
+        <span class="form-text">Currently supported sites: YouTube, Twitch, Kick, TikTok, Instagram</span>
       <% } %>
     </form>
   </div>
